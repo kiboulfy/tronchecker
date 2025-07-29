@@ -10,6 +10,10 @@ readme = "README.md"
 python = ">=3.11,<3.14"
 loguru = "^0.7.2"
 fastapi = "^0.116.1"
+sqlalchemy = "^2.0.41"
+tronpy = "^0.6.1"
+shell = "^1.0.1"
+dotenv = "^0.9.9"
 
 [tool.poetry.group.dev.dependencies]
 typing-extensions = "^4.12.2"
