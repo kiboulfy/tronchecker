@@ -8,10 +8,10 @@ from tronpy import Tron
 from tronpy.exceptions import AddressNotFound
 from tronpy.providers import HTTPProvider
 
-from .database.crud import create_wallet_record
-from .database.models import Base, WalletInfo
-from .database.session import engine, get_db
-from .schemas import WalletChecked
+from src.database.crud import create_wallet_record
+from src.database.models import Base, WalletInfo
+from src.database.session import engine, get_db
+from src.schemas import WalletChecked
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,11 +30,11 @@ def check_wallet(data: str, db: Annotated[Session, Depends(get_db)]) -> WalletCh
     try:
         balance = client.get_account_balance(data)
         bandwidth = client.get_bandwidth(data)
-        energy = client.get_account_resource(data)
+        energy = client.get_energy(data)
     except AddressNotFound as err:
         raise HTTPException(status_code=404, detail="Wallet address not found") from err
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
     return create_wallet_record(
         db=db,

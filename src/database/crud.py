@@ -2,7 +2,8 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from ..schemas import WalletChecked
+from src.schemas import WalletChecked
+
 from .models import WalletInfo
 
 
