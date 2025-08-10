@@ -1,4 +1,5 @@
 import os
+from http import HTTPStatus
 from typing import Annotated
 
 from dotenv import load_dotenv
@@ -13,9 +14,16 @@ from src.database.models import Base, WalletInfo
 from src.database.session import engine, get_db
 from src.schemas import WalletChecked
 
+tags_metadata = [
+    {
+        "name": "wallets",
+        "description": "MVP",
+    },
+]
+
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="tronchecker")
+app = FastAPI(title="tronchecker", version="0.1", openapi_tags=tags_metadata)
 
 
 load_dotenv()
@@ -25,16 +33,19 @@ api_key = os.getenv("TRON_API_KEY")
 client = Tron(provider=HTTPProvider(api_key=api_key))
 
 
-@app.post("/wallet", response_model=WalletChecked)
+@app.post("/wallet", response_model=WalletChecked, tags=["wallets"])
 def check_wallet(data: str, db: Annotated[Session, Depends(get_db)]) -> WalletChecked:
     try:
         balance = client.get_account_balance(data)
         bandwidth = client.get_bandwidth(data)
         energy = client.get_energy(data)
-    except AddressNotFound as err:
-        raise HTTPException(status_code=404, detail="Wallet address not found") from err
+    except (AddressNotFound, ValueError) as err:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Wallet address not found",
+        ) from err
     except Exception as err:
-        raise HTTPException(status_code=500, detail=str(err)) from err
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(err)) from err
 
     return create_wallet_record(
         db=db,
@@ -45,7 +56,7 @@ def check_wallet(data: str, db: Annotated[Session, Depends(get_db)]) -> WalletCh
     )
 
 
-@app.get("/wallets", response_model=list[WalletChecked])
+@app.get("/wallets", response_model=list[WalletChecked], tags=["wallets"])
 def get_wallets(
     db: Annotated[Session, Depends(get_db)],
     skip: int = Query(0, ge=0),
